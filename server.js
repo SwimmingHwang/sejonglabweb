@@ -3,6 +3,7 @@ var session    = require('express-session');
 var bodyParser = require('body-parser');
 var path       = require('path');
 var mysql      = require('mysql');
+var PythonShell = require('python-shell');
 var dbconfig   = require('./config/database.js');
 var template   = require('./lib/template.js');
 var qs = require('querystring');
@@ -266,7 +267,7 @@ app.get('/sub_college',function (req, res){
 		if(err) throw err;
 		
 			var list = template.list(rows);
-			var html = template.department_HTML(list);
+			var html = template.department_HTML(list,``);
 
 			res.writeHead(200);
 			res.end(html);
@@ -280,24 +281,46 @@ app.get('/college',function (req, res){
 	var _url = req.url;
 	var queryData = url.parse(_url,true).query;
 
+	
+	connection.query('SELECT * from department WHERE college_id=?', [queryData.id], function(err,rows){
+		if(err) throw err;
+
+		var list2 = template.list2(rows);
+		var html = template.department_HTML(list2,``);
+
+		res.writeHead(200);
+		res.end(html);
+	});
+
+	/*
 	connection.query('SELECT * from department LEFT JOIN college ON department.college_id = college.college_id WHERE college.college_id=?',[queryData.id],function(err,rows) {
 		if(err) throw err;
+		console.log('college')
 		connection.query('SELECT * from noticeboard', function(err2, nbrows) { //notice board row
 			if(err2) throw err2;
+			console.log('college')
 			connection.query('SELECT * from freeboard', function(err3, fbrows) {  //free board row                                          
-				if(err3) throw err3;                                  
+				if(err3) throw err3;                     
+				console.log('college')             
 				connection.query('SELECT * FROM field',function(err7, fieldrows){
 					if(err7) throw err7;
+					console.log('college')
 
+					/*
 					var list = template.list2(rows);
 					var field= template.list7(fieldrows);
 					var notice = template.list3(nbrows);
 					var free=template.list4(fbrows);
 					var html = template.basic_HTML(list,field,notice,free,``,``,``);
 				
+					var list = template.list2(rows);
+					//var field = template.list7(fieldrows);
+					//var notice = template.list3(nbrows);
+					//var free = template.list4(fbrows);
+					
+					var html = template.basic_department_HTML(list);
 
-
-
+					
 					res.writeHead(200);
 					res.end(html);
 			
@@ -307,7 +330,7 @@ app.get('/college',function (req, res){
 		});
 
 	});
-
+	*/
 
 });
 
@@ -315,17 +338,25 @@ app.get('/college',function (req, res){
 /*학과 별 뷰 생성*/
 app.get('/department',function (req, res){
 	                var _url = req.url;
-	                var queryData  = url.parse(_url,true).query;
-			connection.query('CREATE OR REPLACE VIEW dept as SELECT a.dept_name, b.lab_name, c.professor_name, c.professor_email,c.professor_url, b.lab_location, b.lab_tel FROM department a, professor c, work_dept d,(SELECT lab_name, lab_location, lab_tel, professor_id FROM lab) b WHERE a.dept_id=d.dept_id and d.professor_id=c.professor_id and b.professor_id=c.professor_id and a.dept_id=?',[queryData.id],function(err,rows) {
-							                      if(err) throw err;
-							                      connection.query('SELECT * FROM dept',[rows],function(err2,rows2) {
-										                            if(err2) throw err2;
-										                            var list = template.list5(rows2);
-										                            var html = template.HTML2(list);
-										                            res.writeHead(200);                     
-										                            res.end(html);
-										              });
-						  });
+					var queryData  = url.parse(_url,true).query;
+					connection.query('SELECT * from department WHERE college_id=8', function(err1,dep_rows){
+						if(err1) throw err1;
+						connection.query('CREATE OR REPLACE VIEW dept as SELECT a.dept_name, b.lab_name, c.professor_name, c.professor_email,c.professor_url, b.lab_location, b.lab_tel FROM department a, professor c, work_dept d,(SELECT lab_name, lab_location, lab_tel, professor_id FROM lab) b WHERE a.dept_id=d.dept_id and d.professor_id=c.professor_id and b.professor_id=c.professor_id and a.dept_id=?',[queryData.id],function(err,rows) {
+							if(err) throw err;
+							connection.query('SELECT * FROM dept',[rows],function(err2,rows2) {
+											  if(err2) throw err2;
+											  var dep = template.list2(dep_rows);
+											  var list = template.list5(rows2);
+											  var html = template.department_HTML(dep,list);
+
+											  res.writeHead(200);                     
+											  res.end(html);
+
+								});
+					});
+				
+			
+			});
 });
 
 
@@ -443,21 +474,35 @@ app.post('/college_delete_process',function(req,res){
 		});
 });
 
+app.get('/recommander', function(req, res) {
 
+	connection.query('SELECT * FROM field;', function(err, result) {{
+		var list = template.list7(result);
+		var html = template.recommander_HTML(list);
+		
+	
+		res.writeHead(200);
+		res.end(html);
+	}})
+	
+});
 
 /* SEARCH AND RECOMMAND LAB */
 
-app.get('/search_field_process',function(req,res){
+app.get('/search_field_process',function(req,res) {
 	var _url = req.url;
 	var queryData = url.parse(_url,true).query;
 	//얻어진 value 에 맞게 select 해주기.. list에 넣고 html반환 
 	var i = 1;
 	
 	console.log(queryData.id);
-	if(queryData.id===undefined){
+
+
+
+	/*
+	if (queryData.id===undefined) {
 		list = 'and  f.field_id=-1';
-	}
-	else {
+	} else {
 
 		if(_url.indexOf("&") !== -1)
 		{
@@ -475,9 +520,8 @@ app.get('/search_field_process',function(req,res){
 			list = 'and f.field_id='+queryData.id;
 		}
 	}
-	//console.log(queryData.id);
-	var PythonShell = require('python-shell');
-
+	*/
+	//console.log(list);
 	var options = {
 		mode: 'json',
 		pythonPath: '',
@@ -486,26 +530,73 @@ app.get('/search_field_process',function(req,res){
 		args: queryData.id
 	};
 
-	PythonShell.PythonShell.run('recommender.py', options, function(err, results){
-		if (err) throw err;
-		console.log(results);
-		console.log(results[0].length);
-	});
+	PythonShell.PythonShell.run('recommender.py', options, function(err_r, results){
+		if (err_r) throw err_r;
 
-	var sql = `select f.field_name, l.lab_name, p.professor_name, p.professor_url  from field as f,research as r,professor as p ,lab as l where f.field_id = r.field_id and r.professor_id =p.professor_id and p.lab_id = l.lab_id ` + list; 
-	connection.query(sql,function(err,row){
-		if(err){
-			console.log(err);
-			res.send({success:false , message :'queryerror',error:err});
-			return;
+		console.log(results[0]);
+		var sql = `SELECT 
+		professor.professor_id,
+		professor.professor_name,
+		lab.lab_name,
+		lab.lab_location,
+		lab.lab_tel,
+		professor.professor_url
+	FROM
+		lab,
+		professor
+	WHERE
+		lab.professor_id = professor.professor_id
+			AND`;
+		var order = [];
+		var count = 0;
+		for (var i = results[0].length - 1; i >= 0; i--) {
+			if (count >= 3) 
+				break;
+			sql += ' lab.professor_id = ' + results[0][i];
+			order[count] = results[0][i];
+
+			if (i > 0 && count < 2)
+				sql += ' OR'
+			count ++;
 		}
-		var list8= template.list8(row);
-		var html=  template.HTML2(list8);
-		res.writeHead(302,{Location:''});
-		res.end(html);
-		
 
+		sql += '  ORDER BY FIELD(lab.professor_id, '
+		for (var i = 0; i < order.length; i ++)
+		{
+			sql += order[i];
+			if (i < order.length - 1)
+				sql += ',';
+		}
+		sql += ');'
+		console.log(sql);
+		connection.query(sql, function(err_q, row){
+			if (err_q) throw err_q;
+			console.log(row);
+		});
+		/*
+		for(var i = results[0].length - 1; i >= 0; i--) {
+			var sql = 'SELECT * FROM lab where professor_id = ?'; 
+			connection.query(sql, [results[0][i]], function(err,row){
+				if(err){
+					console.log(err);
+				}
+				console.log(row);
+			});
+		}
+		*/
+
+		//var list8= template.list8(row);
+		var html=  template.HTML2(``);
+		//res.writeHead(302,{Location:''});
+		//res.writeHead(302);
+		res.end(html);
 	});
+
+	
+	
+	
+	
+
 });
 
 

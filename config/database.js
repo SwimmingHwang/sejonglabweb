@@ -1,7 +1,7 @@
 module.exports = {
 	  host     : 'localhost',
 	  user     : 'root',
-	  password : '@db16',
+	  password : '!aiBBc2907d!',
 	  port     : 3306,
 	  database : 'SejongLab_debug',
 	  charset : 'utf8',
