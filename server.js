@@ -200,7 +200,7 @@ app.post('/search', function(req, res) {
 			         var list = template.search_list(rows2);
 			      console.log(rows2);
 			      console.log(list);
-			      var html = template.department_HTML(``,list);
+			      var html = template.department_HTML(``,list,``);
 			          res.writeHead(200);
 			          res.end(html);
 			        });
@@ -249,7 +249,7 @@ app.get('/prof_management', function(req, res) {
 	  res.sendFile(path.join(__dirname + '/prof_info.html'));
 });
 
-pp.post('/prof_management',function (req, res){
+app.post('/prof_management',function (req, res){
 	  var _url = req.url;
 	  var body='';
 
@@ -261,26 +261,26 @@ pp.post('/prof_management',function (req, res){
 	  var lab_name = req.body.lab_name;
 	  var lab_tel = req.body.tel;
 
-	  var query = connection.query('SELECT lab_location, lab_name, lab_tel FROM lab WHERE professor_id=22', function(err, rows) {
+	  var query = connection.query('SELECT lab_location, lab_name, lab_tel FROM lab WHERE professor_id=21', function(err, rows) {
 		      if(err) throw err;
-		      var lab_location = rows[0].lab_location;
-		      var lab_name = rows[0].lab_name;
-		      var lab_tel = rows[0].lab_tel;
-		      query = connection.query('SELECT professor_name, professor_email, professor_url FROM professor WHERE professor_id=22', function(err2, rows2) {
+		      if(!req.body.lab_location)
+			        lab_location = rows[0].lab_location;
+		      if(!req.body.lab_name)
+			        lab_name = rows[0].lab_name;
+		      if(!req.body.lab_tel)
+			        lab_tel = rows[0].lab_tel;
+		      query = connection.query('SELECT professor_name, professor_email, professor_url FROM professor WHERE professor_id=21', function(err2, rows2) {
 			            if(err2) throw err2;
-			            var name = rows2[0].professor_name;
-			            var email = rows2[0].professor_email;
-			            var url = rows2[0].professor_url;
+			            if(!req.body.name)
+				              name = rows2[0].professor_name;
+			            if(!req.body.email)
+				              email = rows2[0].professor_email;
+			            if(!req.body.url)
+				              url = rows2[0].professor_url;
 
-			            if(req.body.name=="")
-				            {
-						            console.log("없음");
-						            throw err2;
-						          }
-
-			            query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=22', [lab_location, lab_name, lab_tel], function(err3, rows3) {
+			            query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=21', [lab_location, lab_name, lab_tel], function(err3, rows3) {
 					            if(err3) throw err3;
-					            connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=22', [name, email, url], function(err4, rows4) {
+					            connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=21', [name, email, url], function(err4, rows4) {
 							              if(err4) throw err4;
 
 
@@ -429,7 +429,7 @@ app.get('/sub_college',function (req, res){
 		if(err) throw err;
 		
 			var list = template.list(rows);
-			var html = template.department_HTML(list,``);
+			var html = template.department_HTML(list,``,``);
 
 			res.writeHead(200);
 			res.end(html);
@@ -448,7 +448,7 @@ app.get('/college',function (req, res){
 		if(err) throw err;
 
 		var list2 = template.list2(rows);
-		var html = template.department_HTML(list2,``);
+		var html = template.department_HTML(list2,``,``);
 
 		res.writeHead(200);
 		res.end(html);
@@ -509,7 +509,7 @@ app.get('/department',function (req, res){
 											  if(err2) throw err2;
 											  var dep = template.list2(dep_rows);
 											  var list = template.list5(rows2);
-											  var html = template.department_HTML(dep,list);
+											  var html = template.department_HTML(dep,list,``,``);
 
 											  res.writeHead(200);                     
 											  res.end(html);
@@ -707,7 +707,7 @@ app.get('/search_field_process',function(req,res) {
 		connection.query(sql, function(err_q, row){
 			if (err_q) throw err_q;
 			var recommander_list = template.recommander_list(row);
-			var html=  template.department_HTML(recommander_list, ``);
+			var html=  template.department_HTML(recommander_list, ``,``);
 
 			res.end(html);
 		});
@@ -723,7 +723,8 @@ app.get('/noticeboard2',function(req,res){
 		if(err) throw err;
 		console.log(row);
 		var list3 = template.list3(row);
-		var html = template.department_HTML(list3, ``);
+		var html = template.department_HTML(list3, ``, `<button class = "updateBut" onclick="window.location='/noticeboard_create';">생성</button>
+		<button class = "updateBut" onclick="window.location='/noticeboard_delete';">삭제</button> `);
 		//res.writeHead(200);
 		res.end(html);
 		
@@ -738,25 +739,11 @@ app.get('/noticeboard',function(req,res){
 	connection.query('SELECT * FROM noticeboard WHERE ntboard_id = ?',[queryData.id],function(err,row){
 		if(err) throw err;
 		var noticeboard_list = template.noticeboard_list(row);
-		var html = template.department_HTML(noticeboard_list, ``);
+		var html = template.department_HTML(noticeboard_list, ``,``);
 		//res.writeHead(200);
 		res.end(html);
 		
 	});
-
-});
-
-/*FREE BOARD */
-app.get('/freeboard',function(req,res){
-	var _url = req.url;
-	var queryData = url.parse(_url,true).query;
-	connection.query('SELECT * FROM freeboard WHERE frboard_id = ?',[queryData.id],function(err,row){
-		                if(err) throw err;
-		                var html = template.HTML_post2(row);
-		                res.writeHead(200);
-		                res.end(html);
-
-		        });
 
 });
 
@@ -765,20 +752,10 @@ app.get('/freeboard',function(req,res){
 app.get('/noticeboard_create',function (req, res){
 	var _url = req.url;
 	var queryData = url.parse(_url,true).query;
-	connection.query('SELECT * from college ',function(err,rows) {
-		if(err) throw err;
 		connection.query('SELECT * from noticeboard', function(err2, nbrows) { //notice board row
 			if(err2) throw err2;
-			connection.query('SELECT * from freeboard', function(err3, fbrows) {  //free board row
-				if(err3) throw err3;
-				connection.query('SELECT * FROM field',function(err7, fieldrows){
-					if(err7) throw err7;
-
-					var list = template.list(rows);
-					var field= template.list7(fieldrows);
 					var notice = template.list3(nbrows);
-					var free=template.list4(fbrows);
-					var html = template.HTML(list,field,notice,free,`` ,`
+					var html = template.department_HTML(notice,`` ,`
 						<form action="/noticeboard_create_process" method = "post">
 						<p><input type="text" name = "title" placeholder="제목"></p>
 						<p>
@@ -789,17 +766,13 @@ app.get('/noticeboard_create',function (req, res){
 						`,``
 
 					);
-					
-
-						
 					console.log("insert");
 					res.writeHead(200);
 					res.end(html);
-				});
-			});
-		});
 	});
+	
 });
+	
 /*NOTICE BOARD CREATE PROSESS  -  INSERT*/
 app.post('/noticeboard_create_process',function(req,res){
 	var _url = req.url;
@@ -814,43 +787,32 @@ app.post('/noticeboard_create_process',function(req,res){
 	});
 });
 
-
-
-
 /* NOTICE BOARD DELETE   */	
 app.get('/noticeboard_delete',function (req, res){
 	var _url = req.url;
-	connection.query('SELECT * from college ',function(err,rows) {
-		if(err) throw err;
-		connection.query('SELECT * from noticeboard', function(err2, nbrows) { //notice board row
-			if(err2) throw err2;
-			connection.query('SELECT * from freeboard', function(err3, fbrows) {  //free board row
-				if(err3) throw err3;
-				connection.query('SELECT * FROM field',function(err7, fieldrows){
-					if(err7) throw err7;
 
-					var list = template.list(rows);
-					var field= template.list7(fieldrows);
-					var notice = template.list3(nbrows);
-					var free=template.list4(fbrows);
-					var html = template.HTML(list,field,notice,free, ``,`
-						<form action="/noticeboard_delete_process" method = "post">
-						<p><input type="text" name = "id" placeholder="삭제할 게시물의 번호"></p>
+	connection.query('SELECT * from noticeboard', function(err2, nbrows) { //notice board row
+		if(err2) throw err2;
 
-						<input type="submit">
-						</form>
-						`,``
+		var notice = template.list3(nbrows);
 
-					);
+		var html = template.department_HTML(notice, ``,`
+			<form action="/noticeboard_delete_process" method = "post">
+			<p><input type="text" name = "id" placeholder="삭제할 게시물의 번호"></p>
+
+			<input type="submit">
+			</form>
+			`,``
+
+		);
 
 
-					res.writeHead(200);
-					res.end(html);
-				});
-			});
-		});
+		res.writeHead(200);
+		res.end(html);
 	});
 });
+
+
 
   
 /*NOTICE BOARD DELETE PROSESS  -  DELETE*/
@@ -978,8 +940,4 @@ app.post('/freeboard_delete_process',function(req,res){
 app.listen(app.get('port'), function () {
 	console.log('Express server listening on port ' + app.get('port'));
 });
-
-
-
-
 
