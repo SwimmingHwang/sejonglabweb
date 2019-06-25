@@ -6,28 +6,93 @@ var mysql      = require('mysql');
 var PythonShell = require('python-shell');
 var dbconfig   = require('./config/database.js');
 var template   = require('./lib/template.js');
+var auth   = require('./lib/auth.js');
+
 var qs = require('querystring');
 var url = require('url');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
+
 var connection = mysql.createConnection(dbconfig);
 var app=express();
+
+var authData = {
+	username: 'prof',
+	password: '11111111',
+	nickname: 'egoing'
+};
 
 app.use(express.static(__dirname + '/public'));
 
 app.use(session({
 		secret: 'secret',
-		resave: true,
-		saveUninitialized: true
+		resave: false,
+		saveUninitialized: true,
+		store: new FileStore()
 }));
+
+var passport = require('passport')
+	, LocalStrategy = require('passport-local')
+	.Strategy;
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function(user, done) {
+
+	done(null, user);
+	
+  });
+  
+  passport.deserializeUser(function(user, done) {
+
+	done(null, user);
+  });
+
+
+passport.use(new LocalStrategy(
+	function(username, password, done) {
+		connection.query('select * from user where id = ?', [username], function(err, result) {
+			if (err) throw err;
+
+			if (result.length > 0) {
+				if (result[0].password === password){
+					return done(null, result[0]);
+				} else {
+					return done(null, false, {
+						message: 'Incorrect password.'
+					});
+				}
+			} else {
+				return done(null, false, {
+					message: 'Incorrect username.'
+				});
+			}
+		});
+		
+	}
+));
+
+
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 
 app.set('port', process.env.PORT || 3000);
 
 /*LOGIN PAGE*/
+
 app.get('/login', function(req, res) {
 		res.sendFile(path.join(__dirname + '/login.html'));
 });
 
+
+app.post('/auth',
+	passport.authenticate('local', { 
+		successRedirect: '/',
+		failureRedirect: '/login'
+	}));
+
+/*
 app.post('/auth', function(req, res) {
 		var username = req.body.username;
 		var password = req.body.password;
@@ -47,12 +112,16 @@ app.post('/auth', function(req, res) {
 				res.end();
 			}
 });
+*/
 
 /*LOGOUT */
 app.get('/logout',function (req, res){
-	  req.session.destroy(function(err){
-		      res.redirect('/');
-		    })
+
+	req.logout();
+	res.redirect('/');
+	//   req.session.destroy(function(err){
+	// 	      res.redirect('/');
+	// 	    })
 });
 
 /*MY PAGE*/
@@ -180,33 +249,55 @@ app.get('/prof_management', function(req, res) {
 	  res.sendFile(path.join(__dirname + '/prof_info.html'));
 });
 
-app.post('/prof_management',function (req, res){
-	  var id=req.session.username;
+pp.post('/prof_management',function (req, res){
 	  var _url = req.url;
 	  var body='';
 
-	  var  name = req.body.name;
+	  var name = req.body.name;
 	  var email = req.body.email;
 	  var url = req.body.url;
 	  var office_hour = req.body.office_hour;
 	  var lab_location = req.body.lab_location;
 	  var lab_name = req.body.lab_name;
 	  var lab_tel = req.body.tel;
-	  var query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=22', [lab_location, lab_name, lab_tel], function(err, rows) {
-		      if(err) throw err;
-		      connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=22', [name, email, url], function(err2, rows2) {
-			            if(err2) throw err2;
-			            res.redirect('/');
-			            res.end();
-			            });
-		      });
-});
 
+	  var query = connection.query('SELECT lab_location, lab_name, lab_tel FROM lab WHERE professor_id=22', function(err, rows) {
+		      if(err) throw err;
+		      var lab_location = rows[0].lab_location;
+		      var lab_name = rows[0].lab_name;
+		      var lab_tel = rows[0].lab_tel;
+		      query = connection.query('SELECT professor_name, professor_email, professor_url FROM professor WHERE professor_id=22', function(err2, rows2) {
+			            if(err2) throw err2;
+			            var name = rows2[0].professor_name;
+			            var email = rows2[0].professor_email;
+			            var url = rows2[0].professor_url;
+
+			            if(req.body.name=="")
+				            {
+						            console.log("없음");
+						            throw err2;
+						          }
+
+			            query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=22', [lab_location, lab_name, lab_tel], function(err3, rows3) {
+					            if(err3) throw err3;
+					            connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=22', [name, email, url], function(err4, rows4) {
+							              if(err4) throw err4;
+
+
+
+							          res.redirect('/');
+							          res.end();
+							          });
+					          });
+			          });
+		    });
+});
 
 
 
 /*MAIN PAGE*/
 app.get('/', function(req, res){
+	console.log(req.user);
 	if (!req.session.loggedin) {
 		var _url = req.url;
 		var queryData = url.parse(_url, true).query;
@@ -247,7 +338,7 @@ app.get('/', function(req, res){
                                     var field= template.list7(fieldrows);
                                     var notice = template.list3(nbrows);
                                     var free=template.list4(fbrows);
-                                    var html = template.basic_HTML(list,field,notice,free,``,``,``);
+                                    var html = template.basic_HTML(list,field,notice,free,``,``,``, auth.statusUI(req, res));
 
 
 
