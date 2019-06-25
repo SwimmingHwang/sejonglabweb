@@ -10,7 +10,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 import MySQLdb
 
-engine = create_engine("mysql://root:"+"!aiBBc2907d!"+"@localhost/SejongLab_debug", encoding='utf-8')
+engine = create_engine("mysql://root:"+"@db16"+"@localhost/SejongLab_debug", encoding='utf-8')
 conn = engine.connect()
 
 data = pd.read_sql_table('research', conn)
