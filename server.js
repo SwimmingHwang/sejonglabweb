@@ -52,7 +52,7 @@ passport.serializeUser(function(user, done) {
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
-		connection.query('select * from user where id = ?', [username], function(err, result) {
+		connection.query('select * from professor where professor_id = ?', [username], function(err, result) {
 			if (err) throw err;
 
 			if (result.length > 0) {
@@ -125,7 +125,11 @@ app.get('/logout',function (req, res){
 });
 
 /*MY PAGE*/
-app.get('/mypage',function (req, res){
+app.get('/mypage', passport.authenticate('local', {session: true}), function (req, res){
+
+	if (!(req.user.auth === 'admin')) {
+		res.redirect('/');
+	}
 	var id=req.session.username;
 	connection.query('select * from student where nickname=?',[id],function(err,rows){
 		if(err) throw err;
@@ -246,10 +250,27 @@ app.post('/lab_create', function(req, res) {
 
 /*PROFESSOR MANAGEMENT PAGE*/
 app.get('/prof_management', function(req, res) {
-	  res.sendFile(path.join(__dirname + '/prof_info.html'));
+	if ((req.user === undefined)) {
+		res.redirect('/');
+	}
+	var prof_id = req.user.professor_id;
+	
+	var sql = 'SELECT professor_name, professor_email, professor_url, professor_officeHour, lab_location, lab_name, lab_tel FROM professor, lab where professor.lab_id = lab.lab_id and professor.professor_id = ?;'
+	connection.query(sql, [prof_id], function(err, result){
+		var html = template.prof_info(result);
+		res.end(html);
+	}
+	)
+	//res.sendFile(path.join(__dirname + '/prof_info.html'));
 });
 
 app.post('/prof_management',function (req, res){
+
+	if (req.user === undefined){
+		res.redirect('/');
+	}
+	var prof_id = req.user.professor_id;
+
 	  var id=req.session.username;
 	  var _url = req.url;
 	  var body='';
@@ -260,15 +281,16 @@ app.post('/prof_management',function (req, res){
 	  var office_hour = req.body.office_hour;
 	  var lab_location = req.body.lab_location;
 	  var lab_name = req.body.lab_name;
-	  var lab_tel = req.body.tel;
-	  var query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=22', [lab_location, lab_name, lab_tel], function(err, rows) {
+	  var lab_tel = req.body.lab_tel;
+
+
+	  var query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=?', [lab_location, lab_name, lab_tel, prof_id], function(err, rows) {
 		      if(err) throw err;
-		      connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=22', [name, email, url], function(err2, rows2) {
+		      connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=?', [name, email, url, prof_id], function(err2, rows2) {
 			            if(err2) throw err2;
-			            res.redirect('/');
-			            res.end();
-			            });
-		      });
+			            res.redirect('/prof_management');
+		});
+	});
 });
 
 
