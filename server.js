@@ -97,6 +97,48 @@ app.post('/join', function(req, res) {
 
 });
 
+/*SEARCH_PAGE*/
+/*
+app.get('/search', function(req, res) {
+	  res.sendFile(path.join(__dirname + '/search.html'));
+});
+*/
+
+
+app.post('/search', function(req, res) {
+
+		var _url = req.url;
+		var body='';
+		var search = req.body.professor_name ;
+		if( search === "") {
+
+			res.writeHead(302,{Location:'/'});
+			                                res.write("");
+			res.end(); return }
+		console.log(search);
+	var query = connection.query('select professor_id from professor where  professor_name like "' + search+'"' , function(err, rows) {
+		      if(err) { throw err;}
+			
+			connection.query('SELECT b.lab_name, a.professor_name, a.professor_email, a.professor_url, b.lab_location, b.lab_tel FROM professor a, lab b WHERE a.professor_id=? and a.professor_id=b.professor_id', [rows[0].professor_id], function(err2, rows2) {
+			            if(err2) { res.send({success:false , message :'queryerror',error:err2});
+					    			
+					    
+				res.writeHead(302,{Location:'/'});
+				res.write("");
+				res.end();
+				return;}
+
+			         var list = template.search_list(rows2);
+			      console.log(rows2);
+			      console.log(list);
+			      var html = template.department_HTML(``,list);
+			          res.writeHead(200);
+			          res.end(html);
+			        });
+});
+});
+
+
 /*LAB_CREATE*/
 app.get('/lab_create', function(req, res) {
 	                        res.sendFile(path.join(__dirname + '/lab_create.html'));
@@ -132,6 +174,35 @@ app.post('/lab_create', function(req, res) {
 				    });
 		    });
 });
+
+/*PROFESSOR MANAGEMENT PAGE*/
+app.get('/prof_management', function(req, res) {
+	  res.sendFile(path.join(__dirname + '/prof_info.html'));
+});
+
+app.post('/prof_management',function (req, res){
+	  var id=req.session.username;
+	  var _url = req.url;
+	  var body='';
+
+	  var  name = req.body.name;
+	  var email = req.body.email;
+	  var url = req.body.url;
+	  var office_hour = req.body.office_hour;
+	  var lab_location = req.body.lab_location;
+	  var lab_name = req.body.lab_name;
+	  var lab_tel = req.body.tel;
+	  var query = connection.query('UPDATE lab SET lab_location=?, lab_name=?,lab_tel=? WHERE professor_id=22', [lab_location, lab_name, lab_tel], function(err, rows) {
+		      if(err) throw err;
+		      connection.query('UPDATE professor SET professor_name=?, professor_email=?, professor_url=? WHERE professor_id=22', [name, email, url], function(err2, rows2) {
+			            if(err2) throw err2;
+			            res.redirect('/');
+			            res.end();
+			            });
+		      });
+});
+
+
 
 
 /*MAIN PAGE*/
@@ -474,6 +545,7 @@ app.post('/college_delete_process',function(req,res){
 		});
 });
 
+/* 연구실 추천 */
 app.get('/recommander', function(req, res) {
 
 	connection.query('SELECT * FROM field;', function(err, result) {{
@@ -494,34 +566,7 @@ app.get('/search_field_process',function(req,res) {
 	var queryData = url.parse(_url,true).query;
 	//얻어진 value 에 맞게 select 해주기.. list에 넣고 html반환 
 	var i = 1;
-	
-	console.log(queryData.id);
 
-
-
-	/*
-	if (queryData.id===undefined) {
-		list = 'and  f.field_id=-1';
-	} else {
-
-		if(_url.indexOf("&") !== -1)
-		{
-			list = 'and ( f.field_id ='+queryData.id[0];
-	
-			while(	i< queryData.id.length ) {
-				list = list + ` or f.field_id =`  +`${queryData.id[i]}`;
-				i=i+1;
-		}
-
-		list = list + ')' ;
-		}
-		else
-		{
-			list = 'and f.field_id='+queryData.id;
-		}
-	}
-	*/
-	//console.log(list);
 	var options = {
 		mode: 'json',
 		pythonPath: '',
@@ -546,21 +591,21 @@ app.get('/search_field_process',function(req,res) {
 		professor
 	WHERE
 		lab.professor_id = professor.professor_id
-			AND`;
+			AND (`;
 		var order = [];
 		var count = 0;
 		for (var i = results[0].length - 1; i >= 0; i--) {
 			if (count >= 3) 
 				break;
-			sql += ' lab.professor_id = ' + results[0][i];
-			order[count] = results[0][i];
+			sql += ' lab.professor_id = ' + (results[0][i] + 1);
+			order[count] = (results[0][i] + 1);
 
 			if (i > 0 && count < 2)
 				sql += ' OR'
 			count ++;
 		}
 
-		sql += '  ORDER BY FIELD(lab.professor_id, '
+		sql += ')  ORDER BY FIELD(lab.professor_id, '
 		for (var i = 0; i < order.length; i ++)
 		{
 			sql += order[i];
@@ -568,38 +613,32 @@ app.get('/search_field_process',function(req,res) {
 				sql += ',';
 		}
 		sql += ');'
-		console.log(sql);
 		connection.query(sql, function(err_q, row){
 			if (err_q) throw err_q;
-			console.log(row);
+			var recommander_list = template.recommander_list(row);
+			var html=  template.department_HTML(recommander_list, ``);
+
+			res.end(html);
 		});
-		/*
-		for(var i = results[0].length - 1; i >= 0; i--) {
-			var sql = 'SELECT * FROM lab where professor_id = ?'; 
-			connection.query(sql, [results[0][i]], function(err,row){
-				if(err){
-					console.log(err);
-				}
-				console.log(row);
-			});
-		}
-		*/
-
-		//var list8= template.list8(row);
-		var html=  template.HTML2(``);
-		//res.writeHead(302,{Location:''});
-		//res.writeHead(302);
-		res.end(html);
+		
 	});
-
-	
-	
-	
-	
 
 });
 
 
+app.get('/noticeboard2',function(req,res){
+	var _url = req.url;
+	connection.query('SELECT * FROM noticeboard;' , function(err,row){
+		if(err) throw err;
+		console.log(row);
+		var list3 = template.list3(row);
+		var html = template.department_HTML(list3, ``);
+		//res.writeHead(200);
+		res.end(html);
+		
+	});
+
+});
 
 /*NOTICE BOARD*/
 app.get('/noticeboard',function(req,res){
@@ -607,8 +646,9 @@ app.get('/noticeboard',function(req,res){
 	var queryData = url.parse(_url,true).query;
 	connection.query('SELECT * FROM noticeboard WHERE ntboard_id = ?',[queryData.id],function(err,row){
 		if(err) throw err;
-		var html = template.HTML_post(row);
-		res.writeHead(200);
+		var noticeboard_list = template.noticeboard_list(row);
+		var html = template.department_HTML(noticeboard_list, ``);
+		//res.writeHead(200);
 		res.end(html);
 		
 	});
