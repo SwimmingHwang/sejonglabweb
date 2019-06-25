@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		  <meta charset="UTF-8">
+		    <title>Sejong SW Lab Web</title>
+		      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+		        <!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" defer></script>-->
+			  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"/>
+			    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
+			      <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+			        
+			        
+
+			        <style type="text/css">
+  #web_title{
+	        width : 700px;
+		      font-size: 3rem;
+			            font-weight : bold;
+				          padding-left: 15px;
+						        padding-right : 0px;
+							      padding-top:  10px;
+								            padding-bottom : 0px;
+									          margin-block-start: 0em;
+											        margin-block-end: 0em;
+													  }
+
+    body {
+	        display: grid;
+			    grid-template-areas:
+				          "header header"
+					        "nav main "
+						      "nav right ";
+						          grid-template-rows: 90px 1fr 1fr;
+								      grid-template-columns: 300px 1fr ;
+									          grid-gap: 5px;
+											      height: 100vh;
+												          margin: 0;
+														      }
+      #page_title{
+	          grid-area: header;
+			    }
+        #pageFooter {
+		    grid-area: footer;
+			      }
+	  #notice_board {
+		      grid-area: main;
+			          padding: 10px;
+					      background: #eeeeee;
+						          }
+	    #free_board{
+		        grid-area: right;
+				    padding: 10px;
+					        background: #eeeeee;
+							    }
+	      #mainNav {
+		          grid-area: nav;
+				      }
+	        header {
+			    background:  #333333;
+				        color : #ffffff;
+					  }
+		  footer, article, nav {
+			      padding: 10px;
+				          background: #eeeeee;
+						    }
+		    /* Top panel : #navbar, #toolbar */
+		    .top_panel { font-size:0.9rem; background-color:#212121; color:#ffffff; z-index:1001; margin-bottom:1rem;}
+		      .subheading {font-size: 1rem;  }
+		        /* Navigation menu bar that appear at the top */
+		        .menubar { display:inline-block; height:1.8rem; } /* height needed to avoid extra bottom border */
+			  .menubar a:link { color:#eeeeee; text-decoration:none; }
+			    .menubar a:visited { color:#eeeeee; text-decoration:none; }
+			      .menubar ul { display:block; padding:0; margin:0; }
+			        .menubar li { display:inline; float:left; padding:0.45rem 1rem; }
+				  .menubar li:hover { background-color:#616161; cursor:default; }
+				    .menubar li ul { display:none; background-color:#212121; border:1px solid #616161; min-width:10rem; position:absolute; z-index:100; margin:0.4rem -1rem;}
+				      .menubar li ul li { display:block; float:none; color:#eeeeee; margin:0; padding:0.6rem 1rem; }
+				        .menubar li ul li:hover { cursor:pointer; }
+					  .menubar li ul li.submenu_divider { margin:0 0.4rem; padding:0; height:1px; border-bottom:1px solid #424242; }
+					    .menubar li:hover ul { display:block; }
+					      /* toolbar containing small icons for tools */
+					      .toolbar { display:inline-block; margin-left:1.8rem; }
+					        .toolbar svg { fill:white; margin: 0.2rem 0.1rem; height:1.2rem;  -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none;}
+						  .toolbar svg:hover { fill:yellow; cursor:pointer; }
+						    .toolbar svg:active { fill:white; }
+						      .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
+						        .toolbar li { display:inline; float:left; padding:0rem 0.3rem; border:1px solid white;} /* main menu items */
+							  .toolbar li:hover { color:red; cursor:pointer; }
+							    #fileList    { display:block; font-size:small; overflow:scroll; min-height:10rem; max-height:50rem; height:100%}
+							      #fileList ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
+							        #fileList li { white-space:nowrap; display:block; padding:0 0.4rem; }
+								  #fileList li:hover   { background-color:#d5e5ff; cursor:pointer; }
+								    #fileList .error     { color:red; }
+								      #fileList .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
+								        #fileList .buffered  { border-left:0.2rem solid #cccccc; }
+									  </style>
+
+	</head>
+
+	<body >
+		  <header id="page_title" >
+			      <!--title-->
+			      <div id="web_title">Sejong SW Lab Web</div>
+			        </header>
+
+				  <nav id="mainNav">
+					      <div class="subheading" > 단과대학 리스트 </div>
+					          
+					          <div class="subheading" > 관심 분야  </div>
+
+						    </nav>
+
+						      <div id="notice_board">
+							          <div class="subheading" > 공고 게시판  </div>
+								    </div>
+
+								      <div id="free_board">
+									          <div class="subheading" > 자유게시판 </div>
+
+										    </div>
+
+										      <footer id="pageFooter"></footer>
+
+	</body>
+
+
+</html>
