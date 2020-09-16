@@ -15,3 +15,6 @@
 - Node.js, express, MySQL
 - HTML5, CSS3, Javascript
 
+## 발표자료 및 최종보고서
+[발표자료](DB발표자료_완성.pdf)   
+[최종보고서](최종보고서.pdf)
